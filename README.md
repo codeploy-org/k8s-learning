@@ -5,58 +5,94 @@ Kubernetes learning environment automation
 
 Setup VM on local machine
 
-# Configure VM
+### Add user to sudoers group and log out session
 
+```
+su root
+/sbin/usermod -aG sudo $USER
+pkill -KILL -u $USER
+```
+
+### Configure VM
 ```
 sudo apt-get update
 sudo apt-get dist-upgrade -y
 ```
 
-Enable copy paste into VM
-
+### Enable copy paste into VM
 ```
 sudo apt-get install -y spice-vdagent
+pkill -KILL -u $USER
 ```
 
-
+### Turn off swapping by creating a backup and editing the fstab file
 ```
-# apt-transport-https may be a dummy package; if so, you can skip that package
+sudo swapoff -a
+sudo sed -i.bak '/swap/s/^/#/' /etc/fstab
+```
+
+### Installing QEMU
+```
+sudo apt-get install -y qemu-system swtpm-tools virt-manager 
+```
+
+### Adding K8S gpg-key
+```
 sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg # allow unprivileged APT programs to read this keyring
+sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+```
 
-# This overwrites any existing configuration in /etc/apt/sources.list.d/kubernetes.list
+### Add K8S repository
+```
 echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
-sudo chmod 644 /etc/apt/sources.list.d/kubernetes.list   # helps tools such as command-not-found to work correctly
+sudo chmod 644 /etc/apt/sources.list.d/kubernetes.list
+```
 
-# This installs kubectl
+## Install K8S kubectl
+```
 sudo apt-get update
 sudo apt-get install -y kubectl
+```
 
-# Autocompletion kubectl
-
+## Autocompletion for K8S kubectl
+```
 sudo apt-get install bash-completion
-
+echo '' >>~/.bashrc
+echo '# K8S' >>~/.bashrc
 echo 'source <(kubectl completion bash)' >>~/.bashrc
+```
 
-# Setting kubectl alias
+## K8S kubectl alias
+```
 echo 'alias k=kubectl' >>~/.bashrc
 echo 'complete -o default -F __start_kubectl k' >>~/.bashrc
+```
 
-# Installing kubectl-convert
-
+## K8S kubectl-convert
+```
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl-convert"
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl-convert.sha256"
 echo "$(cat kubectl-convert.sha256) kubectl-convert" | sha256sum --check
 sudo install -o root -g root -m 0755 kubectl-convert /usr/local/bin/kubectl-convert 
 rm kubectl-convert kubectl-convert.sha256
+```
 
-# Installing QEMU
-sudo apt-get install -y qemu-system swtpm-tools virt-manager 
+## Download minikube
+```
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
+sudo dpkg -i minikube_latest_amd64.deb
+```
 
-# Minikube
+## Autocompletion for K8S kubectl
+```
+sudo apt-get install bash-completion
+echo '' >>~/.bashrc
+echo '# minicube' >>~/.bashrc
+echo 'source <(minicube completion bash)' >>~/.bashrc
+```
 
-curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+## Starting minicube
+```
 minikube start
 ```
